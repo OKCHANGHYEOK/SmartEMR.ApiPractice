@@ -1,4 +1,4 @@
-﻿using SmartEMR.ApiPractice.Entities;
+﻿using SmartEMR.ApiPractice.DTOs;
 
 namespace SmartEMR.ApiPractice.Validator;
 

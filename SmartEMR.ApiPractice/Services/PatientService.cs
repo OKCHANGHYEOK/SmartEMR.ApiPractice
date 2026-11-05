@@ -1,4 +1,5 @@
-﻿using SmartEMR.ApiPractice.Entities;
+﻿using SmartEMR.ApiPractice.DTOs;
+using SmartEMR.ApiPractice.Validator;
 
 namespace SmartEMR.ApiPractice.Services;
 
@@ -38,20 +39,49 @@ public class PatientService : IPatientService
     }
 
 
-    public List<Patient_Res> GetPatients()
+    public ServiceResult<Patient_Res> GetPatients()
     {
-        return _patients;
+        var result = new ServiceResult<Patient_Res>();
+
+        result.Items = [.. _patients.AsReadOnly()];
+        result.IsSucess = true;
+
+        return result;
     }
 
-
-    public Patient_Res? GetPatientById(int id)
+    public ServiceResult<Patient_Res> GetPatientById(int id)
     {
-        return _patients.FirstOrDefault(x => x.PatientId == id);
+        var result = new ServiceResult<Patient_Res>();
+        var ret = _patients.FirstOrDefault(x => x.PatientId == id);
+        
+        if (ret is null)
+        {
+            result.StatusCode = 404;
+            result.Message = "해당하는 환자가 존재하지 않습니다.";
+
+            return result;
+        }
+
+        result.Item = ret;
+        result.IsSucess = true;
+
+        return result;
     }
 
-    public Patient_Res? SetPatient(Patient_Req request)
+    public ServiceResult<Patient_Res> SetPatient(Patient_Req request)
     {
-        Patient_Res item = new()
+        var result = new ServiceResult<Patient_Res>();
+
+        var validate = PatientValidator.Validate(request);
+        if (!validate.IsSuccess)
+        {
+            result.StatusCode = 400;
+            result.Message = validate.Message;
+
+            return result;
+        }
+
+        var item = new Patient_Res
         {
             PatientId = _lastNumber + 1,
             Name = request.Name,
@@ -62,11 +92,17 @@ public class PatientService : IPatientService
 
         if (_patients.Any(x => x.PatientId == item.PatientId))
         {
-            return null;
+            result.StatusCode = 400;
+            result.Message = "하나 이상의 중복된 키를 가진 환자가 존재합니다.";
+
+            return result;
         }
 
         _patients.Add(item);
 
-        return item;
+        result.Item = item;
+        result.IsSucess = true;
+
+        return result;
     }
 }
