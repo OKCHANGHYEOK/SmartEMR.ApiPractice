@@ -1,0 +1,6 @@
+@SmartEMR.ApiPractice_HostAddress = http://localhost:5145
+
+GET {{SmartEMR.ApiPractice_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
