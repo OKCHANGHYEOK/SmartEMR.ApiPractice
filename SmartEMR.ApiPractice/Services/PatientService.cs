@@ -1,49 +1,25 @@
 ﻿using SmartEMR.ApiPractice.DTOs;
+using SmartEMR.ApiPractice.Entities;
+using SmartEMR.ApiPractice.Repository;
 using SmartEMR.ApiPractice.Validator;
 
 namespace SmartEMR.ApiPractice.Services;
 
 public class PatientService : IPatientService
 {
-    private List<Patient_Res> _patients =
-    [
-       new Patient_Res { 
-           PatientId = 1, 
-           Name = "홍길동", 
-           BirthDate = new DateTime(1999, 7, 14),  
-           Gender = "M",
-           PhoneNumber = "010-1111-1111"
-       },
-       new Patient_Res {
-           PatientId = 2,
-           Name = "김철수",
-           BirthDate = new DateTime(2003, 11, 29),
-           Gender = "M",
-           PhoneNumber = "010-2222-2222"
-       },
-       new Patient_Res {
-           PatientId = 3,
-           Name = "이지현",
-           BirthDate = new DateTime(2001, 4, 9),
-           Gender = "F",
-           PhoneNumber = "010-3333-3333"
-       },
-    ];
+    private readonly IPatientRepository _patientRepository;
 
-    private int _lastNumber
+    public PatientService(IPatientRepository patientRepository)
     {
-        get
-        {
-            return _patients.OrderBy(x => x.PatientId).Last().PatientId;
-        }
+        _patientRepository = patientRepository;
     }
-
 
     public ServiceResult<Patient_Res> GetPatients()
     {
         var result = new ServiceResult<Patient_Res>();
+        var ret = _patientRepository.GetPatients();
 
-        result.Items = [.. _patients.AsReadOnly()];
+        result.Items = MapToList(ret);
         result.IsSucess = true;
 
         return result;
@@ -52,7 +28,7 @@ public class PatientService : IPatientService
     public ServiceResult<Patient_Res> GetPatientById(int id)
     {
         var result = new ServiceResult<Patient_Res>();
-        var ret = _patients.FirstOrDefault(x => x.PatientId == id);
+        var ret = _patientRepository.GetPatientById(id);
         
         if (ret is null)
         {
@@ -62,7 +38,7 @@ public class PatientService : IPatientService
             return result;
         }
 
-        result.Item = ret;
+        result.Item = MapToRes(ret);
         result.IsSucess = true;
 
         return result;
@@ -71,8 +47,8 @@ public class PatientService : IPatientService
     public ServiceResult<Patient_Res> SetPatient(Patient_Req request)
     {
         var result = new ServiceResult<Patient_Res>();
-
         var validate = PatientValidator.Validate(request);
+
         if (!validate.IsSuccess)
         {
             result.StatusCode = 400;
@@ -81,28 +57,51 @@ public class PatientService : IPatientService
             return result;
         }
 
-        var item = new Patient_Res
+        var item = new Patient
         {
-            PatientId = _lastNumber + 1,
-            Name = request.Name,
-            BirthDate = request.BirthDate,
-            Gender = request.Gender,
-            PhoneNumber = request.PhoneNumber
+            PAT_Idx = _patientRepository.GetNextIndexNumber(),
+            PAT_Name = request.PAT_Name,
+            PAT_BirthDate = request.PAT_BirthDate,
+            PAT_Sex = request.PAT_Sex,
+            PAT_PhoneNum = request.PAT_PhoneNum
         };
 
-        if (_patients.Any(x => x.PatientId == item.PatientId))
+        var ret = _patientRepository.SetPatient(item);
+        if (ret is null)
         {
+            result.Message = "환자 저장 중 오류가 발생했습니다.";
             result.StatusCode = 400;
-            result.Message = "하나 이상의 중복된 키를 가진 환자가 존재합니다.";
 
             return result;
         }
 
-        _patients.Add(item);
-
-        result.Item = item;
+        result.Item = MapToRes(ret);
         result.IsSucess = true;
 
         return result;
+    }
+
+    private static List<Patient_Res> MapToList(List<Patient> patients)
+    {
+        var result = new List<Patient_Res>();
+
+        foreach (var patient in patients)
+        {
+            result.Add(MapToRes(patient));
+        }
+
+        return result;
+    }
+
+    private static Patient_Res MapToRes(Patient patient)
+    {
+        return new Patient_Res
+        {
+            PAT_Idx = patient.PAT_Idx,
+            PAT_Name = patient.PAT_Name,
+            PAT_BirthDate = patient.PAT_BirthDate,
+            PAT_Sex = patient.PAT_Sex,
+            PAT_PhoneNum  = patient.PAT_PhoneNum
+        };
     }
 }

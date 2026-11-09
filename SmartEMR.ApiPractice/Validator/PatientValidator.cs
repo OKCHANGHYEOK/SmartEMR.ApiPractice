@@ -4,25 +4,25 @@ namespace SmartEMR.ApiPractice.Validator;
 
 public class PatientValidator
 {
-    private static readonly List<string> _genders = ["M", "F"];
+    private static readonly List<string> _sexes = ["M", "F"];
 
     public static ValidateResult Validate(Patient_Req request)
     {
         var result = new ValidateResult() { IsSuccess = false };
 
-        if (string.IsNullOrWhiteSpace(request.Name))
+        if (string.IsNullOrWhiteSpace(request.PAT_Name))
         {
             result.Message = "이름은 필수 입력값입니다.";
             return result;
         }
 
-        if (string.IsNullOrWhiteSpace(request.Gender))
+        if (string.IsNullOrWhiteSpace(request.PAT_Sex))
         {
             result.Message = "성별은 필수 입력값입니다.";
             return result;
         }
 
-        if (!IsValidGender(request.Gender))
+        if (!IsValidPAT_Sex(request.PAT_Sex))
         {
             result.Message = "성별 입력값은 다음 둘 중 하나여야 합니다. [M, F]";
             return result;
@@ -33,8 +33,8 @@ public class PatientValidator
         return result;
     }
 
-    private static bool IsValidGender(string gender)
+    private static bool IsValidPAT_Sex(string PAT_Sex)
     {
-        return _genders.Contains(gender);
+        return _sexes.Contains(PAT_Sex);
     }
 }

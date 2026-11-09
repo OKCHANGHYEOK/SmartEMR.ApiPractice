@@ -2,10 +2,10 @@
 
 public class PatientDTO
 {
-    public string Name { get; set; } = string.Empty;
-    public DateTime? BirthDate { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public string PhoneNumber { get; set; } = string.Empty;
+    public string PAT_Name { get; set; } = string.Empty;
+    public DateTime? PAT_BirthDate { get; set; }
+    public string PAT_Sex { get; set; } = string.Empty;
+    public string PAT_PhoneNum { get; set; } = string.Empty;
 }
 
 public class Patient_Req : PatientDTO
@@ -15,5 +15,5 @@ public class Patient_Req : PatientDTO
 
 public class Patient_Res : PatientDTO
 {
-    public int PatientId { get; set; }
+    public int PAT_Idx { get; set; }
 }

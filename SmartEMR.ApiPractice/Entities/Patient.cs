@@ -2,9 +2,16 @@
 
 public class Patient
 {
-    public int PatientId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public DateTime? BirthDate { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public string PhoneNumber { get; set; } = string.Empty;
+    public int PAT_Idx { get; set; }
+    public string PAT_Name { get; set; } = string.Empty;
+    public DateTime? PAT_BirthDate { get; set; }
+    public string PAT_BirthYear { get; set; } = string.Empty;
+    public string PAT_BirthMonth { get; set; } = string.Empty;
+    public string PAT_BirthDay { get; set; } = string.Empty;
+    public string PAT_Sex { get; set; } = string.Empty;
+    public string PAT_PhoneNum { get; set; } = string.Empty;
+    public string PAT_PhoneNum1 { get; set; } = string.Empty;
+    public string PAT_PhoneNum2 { get; set; } = string.Empty;
+    public string PAT_PhoneNum3 { get; set; } = string.Empty;
+
 }

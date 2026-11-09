@@ -51,7 +51,7 @@ public class PatientController : ControllerBase
 
         return CreatedAtAction(
             nameof(GetPatientById),
-            new { id = result.Item.PatientId },
+            new { id = result.Item.PAT_Idx },
             result
         );
     }

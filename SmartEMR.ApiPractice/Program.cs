@@ -1,3 +1,4 @@
+using SmartEMR.ApiPractice.Repository;
 using SmartEMR.ApiPractice.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,14 +15,18 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 builder.Services.AddOpenApi();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IPatientService, PatientService>();
+builder.Services.AddSingleton<IPatientRepository, PatientRepository>();
 
 var app = builder.Build();
 
