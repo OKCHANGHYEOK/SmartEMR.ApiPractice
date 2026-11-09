@@ -50,9 +50,21 @@ public class PatientRepository : IPatientRepository
         return ++_lastNumber;
     }
 
-    public Patient SetPatient(Patient patient)
+    public Patient SetPatient(Patient item)
     {
-        _patients.Add(patient);
-        return patient;
+        _patients.Add(item);
+        return item;
+    }
+
+    public Patient UpdatePatient(Patient item)
+    {
+        var target = _patients.FirstOrDefault(x => x.PAT_Idx == item.PAT_Idx);
+
+        target?.PAT_Name = item.PAT_Name;
+        target?.PAT_Sex = item.PAT_Sex;
+        target?.PAT_BirthDate = item.PAT_BirthDate;
+        target?.PAT_PhoneNum = item.PAT_PhoneNum;
+
+        return target ?? default!;
     }
 }

@@ -55,4 +55,17 @@ public class PatientController : ControllerBase
             result
         );
     }
+
+    [HttpPut]
+    [Route("{id}")]
+    public IActionResult UpdatePatient(int id, [FromBody] Patient_Req request)
+    {
+        var result = _patientService.UpdatePatient(id, request);
+        if (result.Item is null || !result.IsSucess)
+        {
+            return StatusCode(result.StatusCode, new { Error = "환자 수정 중 오류가 발생했습니다. 다시 시도해주세요.", Message = result.Message });
+        }
+
+        return Ok(result.Item);
+    }
 }

@@ -5,7 +5,7 @@ using SmartEMR.ApiPractice.Validator;
 
 namespace SmartEMR.ApiPractice.Services;
 
-public class PatientService : IPatientService
+public partial class PatientService : IPatientService
 {
     private readonly IPatientRepository _patientRepository;
 
@@ -69,7 +69,7 @@ public class PatientService : IPatientService
         var ret = _patientRepository.SetPatient(item);
         if (ret is null)
         {
-            result.Message = "환자 저장 중 오류가 발생했습니다.";
+            result.Message = "환자 등록 중 오류가 발생했습니다.";
             result.StatusCode = 400;
 
             return result;
@@ -81,6 +81,48 @@ public class PatientService : IPatientService
         return result;
     }
 
+    public ServiceResult<Patient_Res> UpdatePatient(int id, Patient_Req request)
+    {
+        var result = new ServiceResult<Patient_Res>();
+        if (_patientRepository.GetPatientById(id) is null)
+        {
+            result.Message = "해당하는 환자를 찾을 수 없습니다.";
+            result.StatusCode = 400;
+
+            return result;
+        }
+
+        var validate = PatientValidator.Validate(request);
+
+        if (!validate.IsSuccess)
+        {
+            result.StatusCode = 400;
+            result.Message = validate.Message;
+
+            return result;
+        }
+
+        var item = new Patient
+        {
+            PAT_Idx = id,
+            PAT_Name = request.PAT_Name,
+            PAT_BirthDate = request.PAT_BirthDate,
+            PAT_Sex = request.PAT_Sex,
+            PAT_PhoneNum = request.PAT_PhoneNum
+        };
+
+        var ret = _patientRepository.UpdatePatient(item);
+
+        result.Item = MapToRes(ret);
+        result.IsSucess = true;
+
+        return result;
+    }
+}
+
+// 정적 메서드
+public partial class PatientService
+{
     private static List<Patient_Res> MapToList(List<Patient> patients)
     {
         var result = new List<Patient_Res>();
@@ -101,7 +143,7 @@ public class PatientService : IPatientService
             PAT_Name = patient.PAT_Name,
             PAT_BirthDate = patient.PAT_BirthDate,
             PAT_Sex = patient.PAT_Sex,
-            PAT_PhoneNum  = patient.PAT_PhoneNum
+            PAT_PhoneNum = patient.PAT_PhoneNum
         };
     }
 }

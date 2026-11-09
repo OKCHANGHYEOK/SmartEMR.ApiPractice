@@ -9,4 +9,5 @@ public interface IPatientRepository
     public Patient? GetPatientById(int PAT_Idx);
     public int GetNextIndexNumber();
     public Patient SetPatient(Patient item);
+    public Patient UpdatePatient(Patient item);
 }
