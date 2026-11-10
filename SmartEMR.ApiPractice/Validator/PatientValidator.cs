@@ -2,13 +2,13 @@
 
 namespace SmartEMR.ApiPractice.Validator;
 
-public class PatientValidator
+public class PatientValidator : IBaseValidator<Patient_Req>
 {
     private static readonly List<string> _sexes = ["M", "F"];
 
     public static ValidateResult Validate(Patient_Req request)
     {
-        var result = new ValidateResult() { IsSuccess = false };
+        var result = new ValidateResult();
 
         if (string.IsNullOrWhiteSpace(request.PAT_Name))
         {
