@@ -8,10 +8,12 @@ namespace SmartEMR.ApiPractice.Services;
 public partial class PatientService : IPatientService
 {
     private readonly IPatientRepository _patientRepository;
+    private readonly IReservationRepository _reservationRepository;
 
-    public PatientService(IPatientRepository patientRepository)
+    public PatientService(IPatientRepository patientRepository, IReservationRepository reservationRepository)
     {
         _patientRepository = patientRepository;
+        _reservationRepository = reservationRepository;
     }
 
     public ServiceResult<Patient_Res> GetPatients()
@@ -114,6 +116,32 @@ public partial class PatientService : IPatientService
         var ret = _patientRepository.UpdatePatient(item);
 
         result.Item = MapToRes(ret);
+        result.IsSucess = true;
+
+        return result;
+    }
+
+    public ServiceResult<Patient_Res> DeletePatient(int id)
+    {
+        var result = new ServiceResult<Patient_Res>();
+        var ret = _patientRepository.DeletePatient(id);
+        if (ret is null)
+        {
+            result.StatusCode = 404;
+            result.Message = "해당하는 환자가 존재하지 않습니다.";
+
+            return result;
+        }
+
+        var existsRES = _reservationRepository.ExistsByPatientId(id);
+        if (existsRES)
+        {
+            result.StatusCode = 409;
+            result.Message = "예약이 존재하는 환자는 삭제할 수 없습니다.";
+
+            return result;
+        }
+
         result.IsSucess = true;
 
         return result;

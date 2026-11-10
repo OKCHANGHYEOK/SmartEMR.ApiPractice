@@ -10,4 +10,5 @@ public interface IPatientRepository
     public int GetNextIndexNumber();
     public Patient SetPatient(Patient item);
     public Patient UpdatePatient(Patient item);
+    public Patient? DeletePatient(int id);
 }

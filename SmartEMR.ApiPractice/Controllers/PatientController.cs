@@ -68,4 +68,28 @@ public class PatientController : ControllerBase
 
         return Ok(result.Item);
     }
+
+    [HttpDelete]
+    [Route("{id}")]
+    public IActionResult DeletePatient(int id)
+    {
+        var result = _patientService.DeletePatient(id);
+        if (!result.IsSucess)
+        {
+            var response = new
+            {
+                Error = "환자 삭제에 실패했습니다.",
+                result.Message
+            };
+
+            return result.StatusCode switch
+            {
+                404 => NotFound(response),
+                409 => Conflict(response),
+                _ => StatusCode(result.StatusCode, response)
+            };
+        }
+
+        return NoContent();
+    }
 }

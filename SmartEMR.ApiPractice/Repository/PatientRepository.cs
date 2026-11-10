@@ -21,7 +21,7 @@ public class PatientRepository : IPatientRepository
        },
        new Patient {
            PAT_Idx = 3,
-           PAT_Name = "이지현",
+           PAT_Name = "이영희",
            PAT_BirthDate = new DateTime(2001, 4, 9),
            PAT_Sex = "F",
            PAT_PhoneNum = "010-3333-3333"
@@ -66,5 +66,18 @@ public class PatientRepository : IPatientRepository
         target?.PAT_PhoneNum = item.PAT_PhoneNum;
 
         return target ?? default!;
+    }
+
+    public Patient? DeletePatient(int PAT_Idx)
+    {
+        var target = _patients.FirstOrDefault(x => x.PAT_Idx == PAT_Idx);
+        if (target is null)
+        {
+            return null;
+        }
+
+        _patients.Remove(target);
+
+        return target;
     }
 }
