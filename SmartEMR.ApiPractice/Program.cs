@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using SmartEMR.ApiPractice.Infrastructure;
 using SmartEMR.ApiPractice.Repository;
 using SmartEMR.ApiPractice.Services;
 
@@ -16,10 +18,10 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
-    });
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+                });
 builder.Services.AddOpenApi();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -30,6 +32,8 @@ builder.Services.AddSingleton<IPatientRepository, PatientRepository>();
 
 builder.Services.AddSingleton<IReservationService, ReservationService>();
 builder.Services.AddSingleton<IReservationRepository, ReservationRepository>();
+
+SetDBSettings(builder);
 
 var app = builder.Build();
 
@@ -51,3 +55,17 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static void SetDBSettings(WebApplicationBuilder builder)
+{
+    var dbSettings = builder.Configuration.GetSection("DBSettings").Get<DBSettings>();
+    if (dbSettings is null) 
+        return;
+
+    string connectionStrings = $"Server={dbSettings.Server};" +
+                               $"Database={dbSettings.Database};" +
+                               $"Trusted_Connection={dbSettings.TrustedConnection};" +
+                               $"TrustServerCertificate={dbSettings.TrustServerCertificate};";
+
+    builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionStrings));
+}
