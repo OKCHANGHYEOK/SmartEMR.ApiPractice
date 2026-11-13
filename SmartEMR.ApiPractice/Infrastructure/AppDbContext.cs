@@ -42,12 +42,15 @@ public class AppDbContext : DbContext, IAppDbContext
 
         var result = new List<T>();
         var connection = Database.GetDbConnection();
+        var shouldClose = false;
 
         try
         {
             if (connection.State != ConnectionState.Open)
             {
                 await connection.OpenAsync();
+
+                shouldClose = true;
             }
 
             var procName = sp.ToString();
@@ -103,10 +106,17 @@ public class AppDbContext : DbContext, IAppDbContext
                 while (await reader.ReadAsync())
                 {
                     var ret = new T();
+                    var columns = Enumerable.Range(0, reader.FieldCount)
+                                            .ToDictionary(
+                                                reader.GetName,
+                                                i => i,
+                                                StringComparer.OrdinalIgnoreCase
+                                            );
 
                     foreach (var prop in props)
                     {
-                        var ordinal = reader.GetOrdinal(prop.Name);
+                        if (!columns.TryGetValue(prop.Name, out var ordinal))
+                            continue;
                         
                         if (reader.IsDBNull(ordinal))
                         {
@@ -134,16 +144,16 @@ public class AppDbContext : DbContext, IAppDbContext
 
                     result.Add(ret);
                 }
-
-                var totalCount = totalQueryParam.Value != DBNull.Value ? Convert.ToInt32(totalQueryParam.Value) : 0;
-                var sVal = sValParam.Value != DBNull.Value ? sValParam.Value?.ToString() : string.Empty;
-
-                retCount = totalCount;
-                retMessage = sVal;
-                retIsSuccess = true;
-
-                return result;
             }
+
+            var totalCount = totalQueryParam.Value != DBNull.Value ? Convert.ToInt32(totalQueryParam.Value) : 0;
+            var sVal = sValParam.Value != DBNull.Value ? sValParam.Value?.ToString() : string.Empty;
+
+            retCount = totalCount;
+            retMessage = sVal;
+            retIsSuccess = true;
+
+            return result;
         }
         catch (IndexOutOfRangeException e)
         {
@@ -151,7 +161,10 @@ public class AppDbContext : DbContext, IAppDbContext
         }
         finally
         {
-            await connection.CloseAsync();
+            if (shouldClose && connection.State == ConnectionState.Open)
+            {
+                await connection.CloseAsync();
+            }
         }
 
         return result;
@@ -163,7 +176,7 @@ public class AppDbContext : DbContext, IAppDbContext
         {
             Type t when t == typeof(int) => DbType.Int32,
             Type t when t == typeof(double) => DbType.Double,
-            Type t when t == typeof(float) => DbType.Double,
+            Type t when t == typeof(float) => DbType.Single,
             Type t when t == typeof(decimal) => DbType.Decimal,
             Type t when t == typeof(string) => DbType.String,
             Type t when t == typeof(bool) => DbType.Boolean,
