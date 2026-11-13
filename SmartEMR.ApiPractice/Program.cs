@@ -27,11 +27,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<IPatientService, PatientService>();
-builder.Services.AddSingleton<IPatientRepository, PatientRepository>();
+builder.Services.AddScoped<IAppDbContext>(
+    sp => sp.GetRequiredService<AppDbContext>());
 
-builder.Services.AddSingleton<IReservationService, ReservationService>();
-builder.Services.AddSingleton<IReservationRepository, ReservationRepository>();
+builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 
 SetDBSettings(builder);
 

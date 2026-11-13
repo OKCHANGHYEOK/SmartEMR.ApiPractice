@@ -1,14 +1,12 @@
-﻿using SmartEMR.ApiPractice.DTOs;
-using SmartEMR.ApiPractice.Entities;
+﻿using SmartEMR.ApiPractice.Entities;
 
 namespace SmartEMR.ApiPractice.Repository;
 
 public interface IPatientRepository
 {
-    public List<Patient> GetPatients();
-    public Patient? GetPatientById(int PAT_Idx);
-    public int GetNextIndexNumber();
-    public Patient SetPatient(Patient item);
-    public Patient UpdatePatient(Patient item);
-    public Patient? DeletePatient(int id);
+    public Task<List<Patient>> GetPatients(Patient item);
+    public Task<Patient?> GetPatientById(int PAT_Idx);
+    public Task<Patient?> SetPatient(Patient item);
+    public Task<Patient?> UpdatePatient(Patient item);
+    public Task<Patient?> DeletePatient(int id);
 }

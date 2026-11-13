@@ -2,6 +2,6 @@
 
 public enum eSP
 {
-    Patient_GetPatient = 0,
-    Patient_SetPatient = 1
+    proc_Patient_GetPatient = 0,
+    proc_Patient_SetPatient = 1
 }

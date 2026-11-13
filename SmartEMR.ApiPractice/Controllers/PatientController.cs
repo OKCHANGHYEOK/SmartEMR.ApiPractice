@@ -16,22 +16,22 @@ public class PatientController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetPatients()
+    public async Task<IActionResult> GetPatients([FromQuery] Patient_Req request)
     {
-        var result = _patientService.GetPatients();
+        var result = await _patientService.GetPatients(request);
         if (result.Items is null || !result.IsSucess)
         {
             return StatusCode(result.StatusCode, new { Error = result.Message });
         }
 
-        return Ok(_patientService.GetPatients());
+        return Ok(result.Items);
     }
 
     [HttpGet]
     [Route("{id}")]
-    public IActionResult GetPatientById(int id)
+    public async Task<IActionResult> GetPatientById(int id)
     {
-        var result = _patientService.GetPatientById(id);
+        var result = await _patientService.GetPatientById(id);
         if (result.Item is null || !result.IsSucess)
         {
             return StatusCode(result.StatusCode, new { Error = result.Message });
@@ -41,9 +41,9 @@ public class PatientController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult SetPatient([FromBody] Patient_Req request)
+    public async Task<IActionResult> SetPatient([FromBody] Patient_Req request)
     {
-        var result = _patientService.SetPatient(request);
+        var result = await _patientService.SetPatient(request);
         if (result.Item is null || !result.IsSucess)
         {
             return StatusCode(result.StatusCode, new { Error = "환자 등록 중 오류가 발생했습니다. 다시 시도해주세요.", Message = result.Message });
@@ -58,9 +58,9 @@ public class PatientController : ControllerBase
 
     [HttpPut]
     [Route("{id}")]
-    public IActionResult UpdatePatient(int id, [FromBody] Patient_Req request)
+    public async Task<IActionResult> UpdatePatient(int id, [FromBody] Patient_Req request)
     {
-        var result = _patientService.UpdatePatient(id, request);
+        var result = await _patientService.UpdatePatient(id, request);
         if (result.Item is null || !result.IsSucess)
         {
             return StatusCode(result.StatusCode, new { Error = "환자 수정 중 오류가 발생했습니다. 다시 시도해주세요.", Message = result.Message });
@@ -71,9 +71,9 @@ public class PatientController : ControllerBase
 
     [HttpDelete]
     [Route("{id}")]
-    public IActionResult DeletePatient(int id)
+    public async Task<IActionResult> DeletePatient(int id)
     {
-        var result = _patientService.DeletePatient(id);
+        var result = await _patientService.DeletePatient(id);
         if (!result.IsSucess)
         {
             var response = new

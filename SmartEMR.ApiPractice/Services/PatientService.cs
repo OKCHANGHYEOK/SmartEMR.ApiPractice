@@ -1,4 +1,5 @@
-﻿using SmartEMR.ApiPractice.DTOs;
+﻿using Azure.Core;
+using SmartEMR.ApiPractice.DTOs;
 using SmartEMR.ApiPractice.Entities;
 using SmartEMR.ApiPractice.Repository;
 using SmartEMR.ApiPractice.Validator;
@@ -16,10 +17,23 @@ public partial class PatientService : IPatientService
         _reservationRepository = reservationRepository;
     }
 
-    public ServiceResult<Patient_Res> GetPatients()
+    public async Task<ServiceResult<Patient_Res>> GetPatients(Patient_Req request)
     {
         var result = new ServiceResult<Patient_Res>();
-        var ret = _patientRepository.GetPatients();
+
+        var item = new Patient
+        {
+            PAT_Name = request.PAT_Name,
+        };
+
+        var ret = await _patientRepository.GetPatients(item);
+        if (ret is null || !ret.Any())
+        {
+            result.StatusCode = 404;
+            result.Message = "환자내역이 존재하지 않습니다.";
+
+            return result;
+        }
 
         result.Items = MapToList(ret);
         result.IsSucess = true;
@@ -27,10 +41,10 @@ public partial class PatientService : IPatientService
         return result;
     }
 
-    public ServiceResult<Patient_Res> GetPatientById(int id)
+    public async Task<ServiceResult<Patient_Res>> GetPatientById(int id)
     {
         var result = new ServiceResult<Patient_Res>();
-        var ret = _patientRepository.GetPatientById(id);
+        var ret = await _patientRepository.GetPatientById(id);
         
         if (ret is null)
         {
@@ -46,7 +60,7 @@ public partial class PatientService : IPatientService
         return result;
     }
 
-    public ServiceResult<Patient_Res> SetPatient(Patient_Req request)
+    public async Task<ServiceResult<Patient_Res>> SetPatient(Patient_Req request)
     {
         var result = new ServiceResult<Patient_Res>();
         var validate = PatientValidator.Validate(request);
@@ -61,14 +75,17 @@ public partial class PatientService : IPatientService
 
         var item = new Patient
         {
-            PAT_Idx = _patientRepository.GetNextIndexNumber(),
             PAT_Name = request.PAT_Name,
-            PAT_BirthDate = request.PAT_BirthDate,
+            PAT_BirthYear = request.PAT_BirthYear,
+            PAT_BirthMonth = request.PAT_BirthMonth,
+            PAT_BirthDay = request.PAT_BirthDay,
             PAT_Sex = request.PAT_Sex,
-            PAT_PhoneNum = request.PAT_PhoneNum
+            PAT_Hpp1 = request.PAT_Hpp1,
+            PAT_Hpp2 = request.PAT_Hpp2,
+            PAT_Hpp3 = request.PAT_Hpp3
         };
 
-        var ret = _patientRepository.SetPatient(item);
+        var ret = await _patientRepository.SetPatient(item);
         if (ret is null)
         {
             result.Message = "환자 등록 중 오류가 발생했습니다.";
@@ -83,17 +100,9 @@ public partial class PatientService : IPatientService
         return result;
     }
 
-    public ServiceResult<Patient_Res> UpdatePatient(int id, Patient_Req request)
+    public async Task<ServiceResult<Patient_Res>> UpdatePatient(int id, Patient_Req request)
     {
         var result = new ServiceResult<Patient_Res>();
-        if (_patientRepository.GetPatientById(id) is null)
-        {
-            result.Message = "해당하는 환자를 찾을 수 없습니다.";
-            result.StatusCode = 400;
-
-            return result;
-        }
-
         var validate = PatientValidator.Validate(request);
 
         if (!validate.IsSuccess)
@@ -106,14 +115,24 @@ public partial class PatientService : IPatientService
 
         var item = new Patient
         {
-            PAT_Idx = id,
             PAT_Name = request.PAT_Name,
-            PAT_BirthDate = request.PAT_BirthDate,
+            PAT_BirthYear = request.PAT_BirthYear,
+            PAT_BirthMonth = request.PAT_BirthMonth,
+            PAT_BirthDay = request.PAT_BirthDay,
             PAT_Sex = request.PAT_Sex,
-            PAT_PhoneNum = request.PAT_PhoneNum
+            PAT_Hpp1 = request.PAT_Hpp1,
+            PAT_Hpp2 = request.PAT_Hpp2,
+            PAT_Hpp3 = request.PAT_Hpp3
         };
 
-        var ret = _patientRepository.UpdatePatient(item);
+        var ret = await _patientRepository.UpdatePatient(item);
+        if (ret is null)
+        {
+            result.StatusCode = 400;
+            result.Message = "환자저장에 실패했습니다.";
+
+            return result;
+        }
 
         result.Item = MapToRes(ret);
         result.IsSucess = true;
@@ -121,10 +140,10 @@ public partial class PatientService : IPatientService
         return result;
     }
 
-    public ServiceResult<Patient_Res> DeletePatient(int id)
+    public async Task<ServiceResult<Patient_Res>> DeletePatient(int id)
     {
         var result = new ServiceResult<Patient_Res>();
-        var ret = _patientRepository.DeletePatient(id);
+        var ret = await _patientRepository.DeletePatient(id);
         if (ret is null)
         {
             result.StatusCode = 404;
@@ -133,14 +152,14 @@ public partial class PatientService : IPatientService
             return result;
         }
 
-        var existsRES = _reservationRepository.ExistsByPatientId(id);
-        if (existsRES)
-        {
-            result.StatusCode = 409;
-            result.Message = "예약이 존재하는 환자는 삭제할 수 없습니다.";
+        //var existsRES = _reservationRepository.ExistsByPatientId(id);
+        //if (existsRES)
+        //{
+        //    result.StatusCode = 409;
+        //    result.Message = "예약이 존재하는 환자는 삭제할 수 없습니다.";
 
-            return result;
-        }
+        //    return result;
+        //}
 
         result.IsSucess = true;
 
@@ -169,9 +188,13 @@ public partial class PatientService
         {
             PAT_Idx = patient.PAT_Idx,
             PAT_Name = patient.PAT_Name,
-            PAT_BirthDate = patient.PAT_BirthDate,
+            PAT_BirthYear = patient.PAT_BirthYear,
+            PAT_BirthMonth = patient.PAT_BirthMonth,
+            PAT_BirthDay = patient.PAT_BirthDay,
             PAT_Sex = patient.PAT_Sex,
-            PAT_PhoneNum = patient.PAT_PhoneNum
+            PAT_Hpp1 = patient.PAT_Hpp1,
+            PAT_Hpp2 = patient.PAT_Hpp2,
+            PAT_Hpp3 = patient.PAT_Hpp3
         };
     }
 }
