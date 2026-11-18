@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using SmartEMR.ApiPractice.DTOs;
+﻿using SmartEMR.ApiPractice.DTOs;
 using SmartEMR.ApiPractice.Entities;
 using SmartEMR.ApiPractice.Repository;
 using SmartEMR.ApiPractice.Validator;

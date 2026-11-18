@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace SmartEMR.ApiPractice.Infrastructure;
 
@@ -9,6 +10,12 @@ public class AppDbContext : DbContext, IAppDbContext
     public int retCount { get; set; }
     public string? retMessage { get; set; }
     public bool retIsSuccess { get; set; }
+
+    private static readonly Dictionary<string, object?> outputParameterDefaults = new (StringComparer.OrdinalIgnoreCase)
+    {
+        ["TotalQuery"] = 0,
+        ["sVal"] = string.Empty
+    };
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -69,39 +76,42 @@ public class AppDbContext : DbContext, IAppDbContext
             if (props is null)
                 return null;
 
-            foreach (var prop in props)
+            if (command is not SqlCommand sqlCommand)
             {
-                var propName = prop.Name;
-                var value = prop.GetValue(item);
-
-                if (value is null)
-                    continue;
-
-                var paramItem = command.CreateParameter();
-                paramItem.ParameterName = $"@{propName}";
-                paramItem.Value = value;
-                paramItem.DbType = GetDbType(prop.PropertyType);
-
-                command.Parameters.Add(paramItem);
+                throw new InvalidOperationException("The configured database provider must be SQL Server.");
             }
 
-            // OUTPUT 변수
-            var totalQueryParam = command.CreateParameter();
-            totalQueryParam.ParameterName = "@TotalQuery";
-            totalQueryParam.DbType = DbType.Int32;
-            totalQueryParam.Direction = ParameterDirection.Output;
+            SqlCommandBuilder.DeriveParameters(sqlCommand);
 
-            command.Parameters.Add(totalQueryParam);
+            var propertiesByName = props.ToDictionary(prop => prop.Name, StringComparer.OrdinalIgnoreCase);
+            for (var index = sqlCommand.Parameters.Count - 1; index >= 0; index--)
+            {
+                var parameter = (SqlParameter)sqlCommand.Parameters[index];
+                var parameterName = parameter.ParameterName.TrimStart('@');
 
-            var sValParam = command.CreateParameter();
-            sValParam.ParameterName = "@sVal";
-            sValParam.DbType = DbType.String;
-            sValParam.Size = 250;
-            sValParam.Direction = ParameterDirection.Output;
+                if (parameter.Direction is ParameterDirection.Output or ParameterDirection.InputOutput && outputParameterDefaults.TryGetValue(parameterName, out var defaultValue))
+                {
+                    parameter.Value = defaultValue ?? DBNull.Value;
+                    continue;
+                }
 
-            command.Parameters.Add(sValParam);
+                if (parameter.Direction is not (ParameterDirection.Input or ParameterDirection.InputOutput))
+                    continue;
 
-            using (var reader = await command.ExecuteReaderAsync())
+                if (!propertiesByName.TryGetValue(parameterName, out var prop))
+                    continue;
+
+                var value = prop.GetValue(item);
+                if (value is null)
+                {
+                    sqlCommand.Parameters.Remove(parameter);
+                    continue;
+                }
+
+                parameter.Value = value;
+            }
+
+            using (var reader = await sqlCommand.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
                 {
@@ -146,8 +156,8 @@ public class AppDbContext : DbContext, IAppDbContext
                 }
             }
 
-            var totalCount = totalQueryParam.Value != DBNull.Value ? Convert.ToInt32(totalQueryParam.Value) : 0;
-            var sVal = sValParam.Value != DBNull.Value ? sValParam.Value?.ToString() : string.Empty;
+            var totalCount = GetOutputParameterValue<int>(sqlCommand, "TotalQuery");
+            var sVal = GetOutputParameterValue<string>(sqlCommand, "sVal") ?? string.Empty;
 
             retCount = totalCount;
             retMessage = sVal;
@@ -170,19 +180,21 @@ public class AppDbContext : DbContext, IAppDbContext
         return result;
     }
 
-    private static DbType GetDbType(Type propType)
+    /// <summary>
+    /// 지정된 이름의 출력 매개변수 값을 찾아 요청한 형식으로 변환합니다.
+    /// </summary>
+    private static T? GetOutputParameterValue<T>(SqlCommand command, string parameterName)
     {
-        return propType switch
+        var parameter = command.Parameters
+                               .Cast<SqlParameter>()
+                               .FirstOrDefault(candidate => candidate.Direction is ParameterDirection.Output or ParameterDirection.InputOutput && string.Equals(candidate.ParameterName.TrimStart('@'), parameterName, StringComparison.OrdinalIgnoreCase));
+
+        if (parameter is null || parameter.Value is DBNull)
         {
-            Type t when t == typeof(int) => DbType.Int32,
-            Type t when t == typeof(double) => DbType.Double,
-            Type t when t == typeof(float) => DbType.Single,
-            Type t when t == typeof(decimal) => DbType.Decimal,
-            Type t when t == typeof(string) => DbType.String,
-            Type t when t == typeof(bool) => DbType.Boolean,
-            Type t when t == typeof(DateTime) => DbType.DateTime,
-            _ => DbType.Object
-        };
+            return default;
+        }
+
+        return (T)Convert.ChangeType(parameter.Value, typeof(T));
     }
 
     private void ClearData()
