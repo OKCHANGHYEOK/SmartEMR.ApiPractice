@@ -22,6 +22,8 @@ builder.Services.AddControllers()
                 {
                     options.JsonSerializerOptions.PropertyNamingPolicy = null;
                 });
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -39,6 +41,8 @@ builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 SetDBSettings(builder);
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
