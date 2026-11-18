@@ -38,7 +38,7 @@ public partial class ReservationService : IReservationService
         return result;
     }
 
-    public ServiceResult<Reservation_Res> SetReservation(Reservation_Req request)
+    public async Task<ServiceResult<Reservation_Res>> SetReservation(Reservation_Req request, CancellationToken ct)
     {
         var result = new ServiceResult<Reservation_Res>();
         var validateResult = ReservationValidator.Validate(request);
@@ -51,7 +51,7 @@ public partial class ReservationService : IReservationService
             return result;
         }
 
-        var verifyResult = VerifySaveData(request);
+        var verifyResult = await VerifySaveData(request, ct);
         if (verifyResult != 200)
         {
             result.StatusCode = verifyResult;
@@ -82,9 +82,9 @@ public partial class ReservationService : IReservationService
         return result;
     }
 
-    private int VerifySaveData(Reservation_Req request)
+    private async Task<int> VerifySaveData(Reservation_Req request, CancellationToken ct)
     {
-        var retPAT = _patientRepository.GetPatientById(request.PAT_Idx.GetValueOrDefault(0));
+        var retPAT = await _patientRepository.GetPatientById(request.PAT_Idx.GetValueOrDefault(0), ct);
         if (retPAT is null)
         {
             return 404;

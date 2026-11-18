@@ -28,9 +28,9 @@ public class ReservationController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult SetReservation(Reservation_Req request)
+    public async Task<IActionResult> SetReservation(Reservation_Req request, CancellationToken ct)
     {
-        var result = _reservationService.SetReservation(request);
+        var result = await _reservationService.SetReservation(request, ct);
         if (result.Item is null)
         {
             var response = new

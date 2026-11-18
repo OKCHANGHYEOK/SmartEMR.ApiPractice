@@ -21,9 +21,9 @@ public class AppDbContext : DbContext, IAppDbContext
     {
     }
 
-    public async Task<T?> GetItemAsync<T>(eSP sp, T item) where T : class, new()
+    public async Task<T?> GetItemAsync<T>(eSP sp, T item, CancellationToken ct) where T : class, new()
     {
-        var result = await ExecuteQueryAsync<T>(sp, item);
+        var result = await ExecuteQueryAsync<T>(sp, item, ct);
         if (result is null || result.Count == 0)
         {
             return default!;
@@ -32,9 +32,9 @@ public class AppDbContext : DbContext, IAppDbContext
         return result.First();
     }
 
-    public async Task<List<T>> GetItemsAsync<T>(eSP sp, T item) where T : class, new()
+    public async Task<List<T>> GetItemsAsync<T>(eSP sp, T item, CancellationToken ct) where T : class, new()
     {
-        var result = await ExecuteQueryAsync<T>(sp, item);
+        var result = await ExecuteQueryAsync<T>(sp, item, ct);
         if (result is null)
         {
             return default!;
@@ -43,7 +43,7 @@ public class AppDbContext : DbContext, IAppDbContext
         return result;
     }
 
-    private async Task<List<T>?> ExecuteQueryAsync<T>(eSP sp, T item) where T : class, new()
+    private async Task<List<T>?> ExecuteQueryAsync<T>(eSP sp, T item, CancellationToken ct) where T : class, new()
     {
         ClearData();
 
@@ -55,7 +55,7 @@ public class AppDbContext : DbContext, IAppDbContext
         {
             if (connection.State != ConnectionState.Open)
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync(ct);
 
                 shouldClose = true;
             }
@@ -111,9 +111,9 @@ public class AppDbContext : DbContext, IAppDbContext
                 parameter.Value = value;
             }
 
-            using (var reader = await sqlCommand.ExecuteReaderAsync())
+            using (var reader = await sqlCommand.ExecuteReaderAsync(ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     var ret = new T();
                     var columns = Enumerable.Range(0, reader.FieldCount)

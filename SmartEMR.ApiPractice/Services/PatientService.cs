@@ -16,7 +16,7 @@ public partial class PatientService : IPatientService
         _reservationRepository = reservationRepository;
     }
 
-    public async Task<ServiceResult<Patient_Res>> GetPatients(Patient_Req request)
+    public async Task<ServiceResult<Patient_Res>> GetPatients(Patient_Req request, CancellationToken ct)
     {
         var result = new ServiceResult<Patient_Res>();
 
@@ -25,7 +25,7 @@ public partial class PatientService : IPatientService
             PAT_Name = request.PAT_Name,
         };
 
-        var ret = await _patientRepository.GetPatients(item);
+        var ret = await _patientRepository.GetPatients(item, ct);
         if (ret is null || !ret.Any())
         {
             result.StatusCode = 404;
@@ -40,10 +40,10 @@ public partial class PatientService : IPatientService
         return result;
     }
 
-    public async Task<ServiceResult<Patient_Res>> GetPatientById(int id)
+    public async Task<ServiceResult<Patient_Res>> GetPatientById(int id, CancellationToken ct)
     {
         var result = new ServiceResult<Patient_Res>();
-        var ret = await _patientRepository.GetPatientById(id);
+        var ret = await _patientRepository.GetPatientById(id, ct);
         
         if (ret is null)
         {
@@ -59,7 +59,7 @@ public partial class PatientService : IPatientService
         return result;
     }
 
-    public async Task<ServiceResult<Patient_Res>> SetPatient(Patient_Req request)
+    public async Task<ServiceResult<Patient_Res>> SetPatient(Patient_Req request, CancellationToken ct)
     {
         var result = new ServiceResult<Patient_Res>();
         var validate = PatientValidator.Validate(request);
@@ -84,7 +84,7 @@ public partial class PatientService : IPatientService
             PAT_Hpp3 = request.PAT_Hpp3
         };
 
-        var ret = await _patientRepository.SetPatient(item);
+        var ret = await _patientRepository.SetPatient(item, ct);
         if (ret is null)
         {
             result.Message = "환자 등록 중 오류가 발생했습니다.";
@@ -99,7 +99,7 @@ public partial class PatientService : IPatientService
         return result;
     }
 
-    public async Task<ServiceResult<Patient_Res>> UpdatePatient(int id, Patient_Req request)
+    public async Task<ServiceResult<Patient_Res>> UpdatePatient(int id, Patient_Req request, CancellationToken ct)
     {
         var result = new ServiceResult<Patient_Res>();
         var validate = PatientValidator.Validate(request);
@@ -124,7 +124,7 @@ public partial class PatientService : IPatientService
             PAT_Hpp3 = request.PAT_Hpp3
         };
 
-        var ret = await _patientRepository.UpdatePatient(item);
+        var ret = await _patientRepository.UpdatePatient(item, ct);
         if (ret is null)
         {
             result.StatusCode = 400;
@@ -139,10 +139,10 @@ public partial class PatientService : IPatientService
         return result;
     }
 
-    public async Task<ServiceResult<Patient_Res>> DeletePatient(int id)
+    public async Task<ServiceResult<Patient_Res>> DeletePatient(int id, CancellationToken ct)
     {
         var result = new ServiceResult<Patient_Res>();
-        var ret = await _patientRepository.DeletePatient(id);
+        var ret = await _patientRepository.DeletePatient(id, ct);
         if (ret is null)
         {
             result.StatusCode = 404;
