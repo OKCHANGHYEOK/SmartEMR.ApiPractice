@@ -9,4 +9,6 @@ public interface IPatientRepository
     public Task<Patient?> SetPatient(Patient item, CancellationToken ct);
     public Task<Patient?> UpdatePatient(Patient item, CancellationToken ct);
     public Task<Patient?> DeletePatient(int id, CancellationToken ct);
+
+    public virtual int GetLastNumber() { return 0; }
 }

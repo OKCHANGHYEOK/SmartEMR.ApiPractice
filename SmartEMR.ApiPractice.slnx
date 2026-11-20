@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="SmartEMR.ApiPractice/SmartEMR.ApiPractice.csproj" />
+  <Project Path="Tests/Tests.csproj" Id="2a74ab7b-e6ec-45d5-bf0b-af760d0e5d98" />
 </Solution>
